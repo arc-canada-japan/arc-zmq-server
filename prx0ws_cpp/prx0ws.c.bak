@@ -1,0 +1,44 @@
+
+#include <stdio.h>
+#include <zmq.h>
+
+
+int main(int argc, char *argv[]) {
+
+  int xsub_port = 2000;
+  if (argc>1) {
+    sscanf(argv[1], "%i", &xsub_port);
+  }
+  int xpub_port = xsub_port+1;
+
+  int kBufSize=32;
+  char xsub_addr[kBufSize];
+  snprintf(xsub_addr, kBufSize, "ws://*:%d", xsub_port);
+  char xpub_addr[kBufSize];
+  snprintf(xpub_addr, kBufSize, "ws://*:%d", xpub_port);
+
+  void *context = zmq_ctx_new ();
+  void *xsub = zmq_socket (context, ZMQ_XSUB);
+
+  if (zmq_bind(xsub, xsub_addr)!=0) {
+    char mesg[64];
+    snprintf(mesg, 64, "** failed to bind(xsub, \"%s\"): %s",
+             xsub_addr, zmq_strerror(errno));
+    fputs(mesg, stderr);
+    fputs("\n", stderr);
+  } else {
+    fprintf(stderr, "-- xsub: '%s'\n", xsub_addr);
+  }
+
+  void *xpub = zmq_socket (context, ZMQ_XPUB);
+  if (zmq_bind(xpub, xpub_addr)!=0) {
+    char mesg[64];
+    snprintf(mesg, 64, "** failed to bind(xpub, \"%s\"): %s",
+             xpub_addr, zmq_strerror(errno));
+    fputs(mesg, stderr);
+  } else {
+    fprintf(stderr, "-- xpub: '%s'\n", xpub_addr);
+  }
+
+  zmq_proxy(xpub, xsub, NULL);
+}

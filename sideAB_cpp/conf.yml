@@ -1,0 +1,16 @@
+
+meta:
+  update: 2024/08/17
+  author: knaga
+
+sideA:
+  pub_addr: "ws://127.111.111.111:80/atobpub"
+  sub_addr: "ws://127.111.111.111:80/btoasub"
+  data_size: 32
+  flood_size: 1000
+  interval_ms: 10
+  loop_num: 10
+
+sideB:
+  sub_addr: "ws://127.111.111.111:80/atobsub"
+  pub_addr: "ws://127.111.111.111:80/btoapub"

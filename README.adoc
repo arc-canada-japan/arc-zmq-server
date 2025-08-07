@@ -1,0 +1,103 @@
+= An echo-back test among 3 hosts using ZeroMQ pub/sub on WebSocket
+K.Naga
+v 0.5, 2024/08/18
+// ヘッダ内に空行あるとバグるかも
+
+== summary
+
+ - An echo-back test on 3 hosts: sideA - relay - sideB (cf: link:https://zguide.zeromq.org/docs/chapter2/#The-Dynamic-Discovery-Problem[Fig.13 Pub-Sub Network with a Proxy])
+ - The relay host may use global IP address to accept connections from sideA and sideB.
+ - The sideA/B host can be inside of firewall or NAT LAN.
+ - Please modify IP addresses of the relay host in link:sideAB_cpp/conf.yml[conf.yml] and link:relay_bin/nginx.conf[nginx.conf] (In this repository, a loopback IP `127.111.111.111` is used for local test).
+ - Parameters are in the link:sideAB_cpp/conf.yml[conf.yml]
+
+Notes:
+
+ - Both sideA and sideB must be singleton, even though ZeroMQ pub/sub supports N-N communication.
+ - There are 2 stremas, named `atob` and `btoa`.
+ - At the sideA program (starter), the main thread sends to `atobpub` and the receiver thread receives from `btoasub`.
+ - At the sideB program (echoback), the main thread receives from `atobsub` and sends to `btoapub`.
+ - The sideA program generates report files: `sender.csv`, `receiver.csv` .
+ 
+Libraries:
+
+[cols="1,1,1,6"]
+|===
+^|name ^| version ^| license ^| download link
+
+^| libzmq ^| 4.3.5 ^| link:https://github.com/zeromq/libzmq/blob/v4.3.5/LICENSE[MPL-2.0]
+| https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz
+
+^| cppzmq ^| 4.10.0 ^| link:https://github.com/zeromq/cppzmq/blob/v4.10.0/LICENSE[MIT]
+| https://github.com/zeromq/cppzmq/archive/refs/tags/v4.10.0.tar.gz
+
+^| msgpack-cxx ^| 6.1.1 ^| link:https://github.com/msgpack/msgpack-c/blob/cpp-6.1.1/LICENSE_1_0.txt[BSL-1.0]
+| https://github.com/msgpack/msgpack-c/releases/download/cpp-6.1.1/msgpack-cxx-6.1.1.tar.gz
+
+^| yaml-cpp ^| 0.8.0 ^| link:https://github.com/jbeder/yaml-cpp/blob/0.8.0/LICENSE[MIT]
+| https://github.com/jbeder/yaml-cpp/archive/refs/tags/0.8.0.tar.gz
+
+^| boost ^| (os) ^| link:https://github.com/boostorg/boost/blob/master/LICENSE_1_0.txt[BSL-1.0]
+| link:https://packages.ubuntu.com/source/boost-defaults[Ubuntu] or link:https://packages.debian.org/source/boost-defaults[Debian]
+
+|===
+
+== build
+
+Execute link:./10build_all.sh[] on an Ubuntu/Debian PC connected to the internet.
+
+Deliverables: `build_sideAB_cpp/sideA`, `build_sideAB_cpp/sideB`, `build_prx0ws_cpp/prx0ws`
+
+By-product:
+
+ - binary directory: `libs/target_<os codename>` (e.g. `libs/target_jammy`)
+ - source archives: `libs/archvies`
+ - build script: link:./11build_libs.sh[] 
+
+
+== setup of the relay host
+
+When the relay host is a Ubuntu or Debian machine connected to the internet:
+
+1. Copy the link:./relay_bin[] directory to the relay host.
+2. Execute link:./relay_bin/install_nginx.sh[] on the relay host.
+
+Otherwise, install nginx and configure it like link:./relay_bin/nginx.conf[this nginx.conf]
+
+== running test for example
+
+1. On the relay host at the link:relay_bin[] directory, execute `link:relay_bin/start_nginx.sh[./start_nginx.sh]`
+2. On the relay host at the link:relay_bin[] directory, execute `link:relay_bin/execute_atob.sh[./execute_atob.sh]`
+3. On the relay host at the link:relay_bin[] directory, execute `link:relay_bin/execute_btoa.sh[./execute_btoa.sh]`
+4. On the sideB host, execute `<somewhere>/sideB <somewhere>/conf.yml` (e.g. `./build_sideAB_cpp/sideB ./sideAB_cpp/conf.yml`)
+5. On the sideA host, execute `<somewhere>/sideA <somewhere>/conf.yml` (e.g. `./build_sideAB_cpp/sideA ./sideAB_cpp/conf.yml`)
+
+If successful, `sideA` generates `sender.csv`, `receiver.csv` and console outputs like these:
+----
+-- Conf::load(../sideAB_cpp/conf.yml)
+++ failed to pthread_setschedparam(): Operation not permitted
+-- resized flood_sizes: 1000, data_size: 32
+-- sender: pub to 'ws://127.111.111.111:80/atobpub'
+-- receiver: sub from 'ws://127.111.111.111:80/btoasub'
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+-- notify
+-- got signal
+----
+

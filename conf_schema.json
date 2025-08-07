@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "meta": {
+      "type": "object",
+      "properties": {
+        "update": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "author",
+        "update"
+      ]
+    },
+    "sideA": {
+      "type": "object",
+      "properties": {
+        "pub_addr": {
+          "type": "string"
+        },
+        "sub_addr": {
+          "type": "string"
+        },
+        "data_size": {
+          "type": "integer"
+        },
+        "flood_size": {
+          "type": "integer"
+        },
+        "interval_ms": {
+          "type": "integer"
+        },
+        "loop_num": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "data_size",
+        "flood_size",
+        "interval_ms",
+        "loop_num",
+        "pub_addr",
+        "sub_addr"
+      ]
+    },
+    "sideB": {
+      "type": "object",
+      "properties": {
+        "sub_addr": {
+          "type": "string"
+        },
+        "pub_addr": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pub_addr",
+        "sub_addr"
+      ]
+    }
+  },
+  "required": [
+    "meta",
+    "sideA",
+    "sideB"
+  ]
+}
